@@ -72,4 +72,4 @@ if __name__ == '__main__':
         os.makedirs('videos')
     if not os.path.exists('music'):
         os.makedirs('music')
-    app.run(debug=True)
+    app.run(debug=True, port=3000)
