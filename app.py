@@ -3,6 +3,9 @@ import ffmpeg
 import os
 import textwrap
 import uuid
+from dotenv import load_dotenv
+
+load_dotenv('.env.local')
 
 app = Flask(__name__)
 
@@ -72,4 +75,8 @@ if __name__ == '__main__':
         os.makedirs('videos')
     if not os.path.exists('music'):
         os.makedirs('music')
-    app.run(debug=True)
+
+    host = os.environ.get('FLASK_RUN_HOST')
+    port = os.environ.get('FLASK_RUN_PORT')
+
+    app.run(debug=True, host=host, port=port)
