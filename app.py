@@ -1,10 +1,59 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request, send_from_directory, jsonify
 import ffmpeg
 import os
 import textwrap
 import uuid
+import time
+from dotenv import load_dotenv
+from google import genai
+
+load_dotenv()
 
 app = Flask(__name__)
+
+def generate_video_with_veo(prompt, output_path, aspect_ratio="16:9", resolution="720p"):
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise ValueError("GOOGLE_API_KEY environment variable is not set")
+
+    try:
+        client = genai.Client(api_key=api_key)
+
+        print(f"Starting video generation with Veo. Prompt: {prompt}, AR: {aspect_ratio}, Res: {resolution}")
+
+        # 1080p and 4k require 8 seconds duration according to docs
+        config = {}
+        if resolution in ["1080p", "4k"]:
+            config["duration_seconds"] = 8
+
+        operation = client.models.generate_videos(
+            model="veo-3.1-generate-preview",
+            prompt=prompt,
+            config={
+                "aspect_ratio": aspect_ratio,
+                "resolution": resolution,
+                **config
+            }
+        )
+
+        # Poll the operation status until the video is ready.
+        while not operation.done:
+            print("Waiting for video generation to complete...")
+            time.sleep(10)
+            operation = client.operations.get(operation)
+
+        if operation.exception:
+            raise Exception(f"Video generation failed: {operation.exception}")
+
+        # Download the generated video.
+        generated_video = operation.response.generated_videos[0]
+        client.files.download(file=generated_video.video)
+        generated_video.video.save(output_path)
+        print(f"Generated video saved to {output_path}")
+    except Exception as e:
+        print(f"Error in generate_video_with_veo: {e}")
+        raise e
+
 
 def create_video_from_text(text, music_path, output_path):
     # Video settings
@@ -54,14 +103,27 @@ def index():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    text = request.form['text']
-    music_file = 'music/background.mp3'
+    text = request.form.get('text')
+    aspect_ratio = request.form.get('aspect_ratio', '16:9')
+    resolution = request.form.get('resolution', '720p')
+
+    if not text:
+        return jsonify({"error": "Prompt text is required"}), 400
+
     video_filename = f"{uuid.uuid4()}.mp4"
     output_path = os.path.join('videos', video_filename)
 
-    create_video_from_text(text, music_file, output_path)
+    try:
+        if os.getenv("GOOGLE_API_KEY"):
+            generate_video_with_veo(text, output_path, aspect_ratio, resolution)
+        else:
+            # Fallback to local generation if no API key is provided
+            music_file = 'music/background.mp3'
+            create_video_from_text(text, music_file, output_path)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    return render_template('index.html', video_path=f'/videos/{video_filename}')
+    return jsonify({"video_path": f'/videos/{video_filename}'})
 
 @app.route('/videos/<filename>')
 def video(filename):

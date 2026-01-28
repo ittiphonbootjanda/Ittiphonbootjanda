@@ -1,2 +1,4 @@
 Flask
 ffmpeg-python
+python-dotenv
+google-genai
