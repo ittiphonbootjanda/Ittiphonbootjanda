@@ -9,11 +9,25 @@
 <body>
     <div class="container">
         <h1>Text to Video Generator</h1>
-        <form action="/generate" method="post">
+        {% if error %}
+        <div class="error-container">
+            <p style="color: red;">Error: {{ error }}</p>
+        </div>
+        {% endif %}
+        <form action="/generate" method="post" onsubmit="showLoading()">
             <textarea name="text" rows="10" cols="50" placeholder="Enter your text here..."></textarea>
             <br>
             <input type="submit" value="Generate Video">
         </form>
+        <div id="loading" style="display: none; margin-top: 20px;">
+            <p>Generating video with Veo... This may take a few minutes. Please wait.</p>
+            <div class="spinner"></div>
+        </div>
+        <script>
+            function showLoading() {
+                document.getElementById('loading').style.display = 'block';
+            }
+        </script>
         {% if video_path %}
         <div class="video-container">
             <h2>Generated Video:</h2>
