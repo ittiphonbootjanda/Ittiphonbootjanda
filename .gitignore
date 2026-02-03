@@ -1,0 +1,11 @@
+app.log
+videos/*.mp4
+!videos/.gitkeep
+__pycache__/
+*.pyc
+.env
+.env.local
+node_modules/
+dist/
+build/
+.vscode/
