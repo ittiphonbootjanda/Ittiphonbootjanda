@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+app.log
+videos/*.mp4
+!videos/.gitkeep
+.pytest_cache/
