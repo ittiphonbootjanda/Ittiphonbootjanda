@@ -9,10 +9,11 @@
 <body>
     <div class="container">
         <h1>Text to Video Generator</h1>
-        <form action="/generate" method="post">
-            <textarea name="text" rows="10" cols="50" placeholder="Enter your text here..."></textarea>
+        <form action="/generate" method="post" onsubmit="handleSubmit(this)">
+            <label for="text-input" class="visually-hidden">Video Text Content</label>
+            <textarea id="text-input" name="text" rows="10" cols="50" placeholder="Enter your text here..." required></textarea>
             <br>
-            <input type="submit" value="Generate Video">
+            <input type="submit" id="submit-btn" value="Generate Video">
         </form>
         {% if video_path %}
         <div class="video-container">
@@ -24,5 +25,17 @@
         </div>
         {% endif %}
     </div>
+    <script>
+        function handleSubmit(form) {
+            const btn = document.getElementById('submit-btn');
+            // Use setTimeout to allow the form to actually submit before disabling
+            setTimeout(() => {
+                btn.disabled = true;
+                btn.value = 'Generating...';
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'not-allowed';
+            }, 0);
+        }
+    </script>
 </body>
 </html>
