@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+app.log
+videos/*.mp4
+.env
+.env.local
+node_modules/
+dist/
+.vscode/
+/home/jules/verification/
+screenshot_*.png
+screenshot.png

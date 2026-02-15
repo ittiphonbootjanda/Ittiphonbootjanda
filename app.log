@@ -1,2 +1,70 @@
  * Serving Flask app 'app'
  * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:3000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 410-907-091
+127.0.0.1 - - [15/Feb/2026 06:37:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:37:28] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:42:17] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:42:17] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:42:17] "[35m[1mPOST /generate HTTP/1.1[0m" 500 -
+Traceback (most recent call last):
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/flask/app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/app.py", line 62, in generate
+    create_video_from_text(text, music_file, output_path)
+  File "/app/app.py", line 48, in create_video_from_text
+    ffmpeg.run(output_video, overwrite_output=True)
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/ffmpeg/_run.py", line 313, in run
+    process = run_async(
+              ^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/site-packages/ffmpeg/_run.py", line 284, in run_async
+    return subprocess.Popen(
+           ^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/home/jules/.pyenv/versions/3.12.12/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'ffmpeg'
+127.0.0.1 - - [15/Feb/2026 06:42:17] "GET /generate?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:42:17] "GET /generate?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:42:17] "GET /generate?__debugger__=yes&cmd=resource&f=console.png&s=T6G4ygIpimXzd1kwr9Ns HTTP/1.1" 200 -
+ * Detected change in '/app/tests/test_ui.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 410-907-091
+127.0.0.1 - - [15/Feb/2026 06:43:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:43:02] "GET /static/style.css HTTP/1.1" 200 -
+ * Detected change in '/app/screenshot_script.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 410-907-091
+127.0.0.1 - - [15/Feb/2026 06:43:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:43:14] "GET /static/style.css HTTP/1.1" 200 -
+ * Detected change in '/app/screenshot_script.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 410-907-091
+127.0.0.1 - - [15/Feb/2026 06:43:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:43:31] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:44:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 06:44:16] "GET /static/style.css HTTP/1.1" 200 -

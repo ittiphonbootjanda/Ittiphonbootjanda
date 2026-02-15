@@ -1,2 +1,5 @@
 Flask
 ffmpeg-python
+pytest
+playwright
+pytest-playwright
