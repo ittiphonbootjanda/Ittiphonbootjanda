@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+videos/*.mp4
+.env
+.env.local
+app.log
+/home/jules/verification/
