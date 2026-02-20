@@ -10,7 +10,8 @@
     <div class="container">
         <h1>Text to Video Generator</h1>
         <form action="/generate" method="post">
-            <textarea name="text" rows="10" cols="50" placeholder="Enter your text here..."></textarea>
+            <label for="video-text" class="visually-hidden">Video Text</label>
+            <textarea name="text" id="video-text" rows="10" cols="50" placeholder="Enter your text here..." required></textarea>
             <br>
             <input type="submit" value="Generate Video">
         </form>
@@ -24,5 +25,18 @@
         </div>
         {% endif %}
     </div>
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('input[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.value = 'Generating...';
+            // Use setTimeout to ensure the form actually submits in some browsers
+            // although for a standard MPA form it should be fine.
+            setTimeout(() => {
+                this.submit();
+            }, 0);
+            e.preventDefault();
+        });
+    </script>
 </body>
 </html>
