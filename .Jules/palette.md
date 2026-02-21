@@ -1,0 +1,3 @@
+## 2026-02-21 - [Form Feedback and Accessibility Patterns]
+**Learning:** For Multi-Page Applications (MPAs), providing immediate visual feedback on form submission is crucial as video generation (FFmpeg) can be slow. Using `setTimeout(..., 0)` allows the browser to initiate the POST request before the submit button is disabled. Additionally, combining focus transitions with accessible box-shadows provides a modern, high-contrast-friendly focus indicator.
+**Action:** Always include a loading state for long-running form actions and use `.visually-hidden` labels for better screen reader support without affecting the visual design.
