@@ -10,19 +10,21 @@
     <div class="container">
         <h1>Text to Video Generator</h1>
         <form action="/generate" method="post">
-            <textarea name="text" rows="10" cols="50" placeholder="Enter your text here..."></textarea>
+            <label for="text-input" class="visually-hidden">Text for video</label>
+            <textarea id="text-input" name="text" rows="10" cols="50" placeholder="Enter your text here..." required></textarea>
             <br>
             <input type="submit" value="Generate Video">
         </form>
-        {% if video_path %}
-        <div class="video-container">
+        {% if video_path %}<div class="video-container">
             <h2>Generated Video:</h2>
-            <video width="640" height="360" controls>
-                <source src="{{ video_path }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </div>
-        {% endif %}
+            <video width="640" height="360" controls><source src="{{ video_path }}" type="video/mp4">Your browser does not support the video tag.</video>
+        </div>{% endif %}
     </div>
+    <script>
+        document.querySelector('form').addEventListener('submit', function() {
+            const btn = this.querySelector('input[type="submit"]');
+            setTimeout(() => { btn.disabled = true; btn.value = 'Generating...'; }, 0);
+        });
+    </script>
 </body>
 </html>

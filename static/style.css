@@ -31,6 +31,13 @@ textarea {
     margin-bottom: 15px;
     font-family: inherit;
     font-size: 1rem;
+    transition: all 0.2s ease-in-out;
+}
+
+textarea:focus,
+input[type="submit"]:focus {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.4);
 }
 
 input[type="submit"] {
@@ -41,10 +48,15 @@ input[type="submit"] {
     border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
+    transition: all 0.2s ease-in-out;
 }
 
-input[type="submit"]:hover {
-    background-color: #45a049;
+input[type="submit"]:hover { background-color: #45a049; }
+input[type="submit"]:disabled { background-color: #ccc; cursor: not-allowed; }
+
+.visually-hidden {
+    position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important;
+    overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important;
 }
 
 .video-container {
