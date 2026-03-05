@@ -31,6 +31,12 @@ textarea {
     margin-bottom: 15px;
     font-family: inherit;
     font-size: 1rem;
+    transition: box-shadow 0.2s;
+}
+
+textarea:focus {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.4);
 }
 
 input[type="submit"] {
@@ -41,10 +47,33 @@ input[type="submit"] {
     border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="submit"]:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.4);
 }
 
 input[type="submit"]:hover {
     background-color: #45a049;
+}
+
+input[type="submit"]:disabled {
+    background-color: #a5d6a7;
+    cursor: not-allowed;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .video-container {
