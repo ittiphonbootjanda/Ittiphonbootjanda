@@ -1,0 +1,3 @@
+## 2025-05-14 - Multi-Page Application Loading Feedback
+**Learning:** In Multi-Page Applications (MPAs), providing immediate visual feedback on form submission is crucial as backend processing (like video generation) can be slow. Using `setTimeout(..., 0)` in a submit listener allows the browser to handle the button state change (disabling and text update) before the actual POST request blocks the UI thread or starts navigation.
+**Action:** Always use `setTimeout(..., 0)` when disabling submit buttons in MPA forms to ensure the UI updates before the browser's default submission behavior takes over.
