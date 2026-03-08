@@ -9,10 +9,11 @@
 <body>
     <div class="container">
         <h1>Text to Video Generator</h1>
-        <form action="/generate" method="post">
-            <textarea name="text" rows="10" cols="50" placeholder="Enter your text here..."></textarea>
+        <form action="/generate" method="post" onsubmit="const b=document.getElementById('sb'); if(document.getElementById('ti').value.trim()){setTimeout(()=>{b.disabled=true; b.value='Generating...'},0)}">
+            <label for="ti" class="visually-hidden">Text for video</label>
+            <textarea id="ti" name="text" rows="10" cols="50" placeholder="Enter your text here..." required></textarea>
             <br>
-            <input type="submit" value="Generate Video">
+            <input type="submit" id="sb" value="Generate Video">
         </form>
         {% if video_path %}
         <div class="video-container">
