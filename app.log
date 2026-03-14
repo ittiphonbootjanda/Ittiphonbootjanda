@@ -1,2 +1,24 @@
  * Serving Flask app 'app'
  * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:3000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 631-326-424
+127.0.0.1 - - [14/Mar/2026 07:00:01] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 07:00:01] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 07:01:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 07:01:40] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 07:01:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 07:01:41] "GET /static/style.css HTTP/1.1" 200 -
+ * Detected change in '/app/verification/test_ui_v2.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 631-326-424
+127.0.0.1 - - [14/Mar/2026 07:01:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 07:01:53] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 07:01:54] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 07:01:54] "GET /static/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 07:02:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [14/Mar/2026 07:02:28] "GET /static/style.css HTTP/1.1" 200 -
