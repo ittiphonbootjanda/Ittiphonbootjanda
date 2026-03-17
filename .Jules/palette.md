@@ -1,0 +1,3 @@
+## 2026-03-17 - Micro-UX and Accessibility Enhancements
+**Learning:** For long-running form submissions in Multi-Page Applications (MPAs), using `setTimeout(..., 0)` to disable the submit button and update its text provides immediate visual feedback to the user without interrupting the browser's form submission process. Combining this with `visually-hidden` labels and clear focus states significantly improves accessibility and the overall "feel" of the interaction.
+**Action:** Always include immediate feedback for form submissions and ensure all interactive elements have highly visible focus states and accessible labels.

@@ -9,11 +9,24 @@
 <body>
     <div class="container">
         <h1>Text to Video Generator</h1>
-        <form action="/generate" method="post">
-            <textarea name="text" rows="10" cols="50" placeholder="Enter your text here..."></textarea>
+        <form action="/generate" method="post" id="generator-form">
+            <label for="video-text" class="visually-hidden">Text to be included in the video</label>
+            <textarea id="video-text" name="text" rows="10" cols="50" placeholder="Enter your text here..." required></textarea>
             <br>
-            <input type="submit" value="Generate Video">
+            <input type="submit" value="Generate Video" id="submit-btn">
         </form>
+
+        <script>
+            const form = document.getElementById('generator-form');
+            const submitBtn = document.getElementById('submit-btn');
+
+            form.addEventListener('submit', () => {
+                setTimeout(() => {
+                    submitBtn.disabled = true;
+                    submitBtn.value = 'Generating...';
+                }, 0);
+            });
+        </script>
         {% if video_path %}
         <div class="video-container">
             <h2>Generated Video:</h2>
