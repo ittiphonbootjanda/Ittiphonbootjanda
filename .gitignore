@@ -1,0 +1,7 @@
+app.log
+__pycache__/
+*.py[cod]
+videos/*.mp4
+.pytest_cache/
+verification/
+.Jules/
