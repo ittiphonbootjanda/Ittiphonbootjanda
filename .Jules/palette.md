@@ -1,0 +1,3 @@
+## 2025-05-14 - Loading state and layout stability
+**Learning:** When adding a border to an element on :focus (e.g., to improve accessibility for high-contrast modes), it can cause a "jump" or layout shift because the border increases the element's size. Additionally, disabling a submit button immediately in a `submit` event listener can prevent the form from actually sending the POST request in some browsers.
+**Action:** Offset the border width by reducing padding by the same amount in the :focus state (e.g., if adding a 2px border, reduce padding by 2px). For button disabling, wrap the state change in a `setTimeout(() => { ... }, 0)` to ensure the browser registers the submission before the button becomes inactive.
