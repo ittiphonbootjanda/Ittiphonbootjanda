@@ -1,0 +1,3 @@
+## 2025-05-14 - Loading State Feedback in Multi-Page Applications (MPA)
+**Learning:** In traditional form submissions (MPA), disabling a submit button immediately in the `submit` event handler can sometimes prevent the browser from successfully initiating the POST request. Using `setTimeout(..., 0)` allows the event loop to proceed with the form submission before the button enters the disabled state.
+**Action:** When providing immediate UI feedback on form submission (like changing button text to "Generating...") in a non-SPA environment, always wrap the state change in a `setTimeout(..., 0)` to ensure the request is sent.
