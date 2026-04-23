@@ -1,0 +1,3 @@
+## 2025-05-14 - [Form Feedback & Accessibility]
+**Learning:** When disabling a submit button on form submission to provide UX feedback in a standard MPA (Multi-Page Application), using `setTimeout(..., 0)` in the JavaScript handler ensures the browser successfully initiates the POST request before the button enters the disabled state. Also, using `.visually-hidden` for labels allows maintaining a clean visual design while ensuring screen reader accessibility.
+**Action:** Use the `setTimeout(..., 0)` pattern for all form-based loading states and prioritize semantic labels with `.visually-hidden` when visual clutter is a concern.
