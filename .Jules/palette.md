@@ -1,0 +1,3 @@
+## 2026-04-29 - [Feedback for Multi-Page Application submissions]
+**Learning:** In a Multi-Page Application (MPA) where form submission triggers a full page reload, providing immediate visual feedback (like disabling a button or changing its text) requires careful timing. Using `setTimeout(..., 0)` ensures the browser registers the submission event and begins the request before the DOM elements are modified or disabled, preventing the submission from being canceled in some browsers.
+**Action:** Always wrap button disabling logic in a `setTimeout(..., 0)` or similar deferral when handling standard HTML form `submit` events.
