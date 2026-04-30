@@ -1,0 +1,3 @@
+## 2026-04-30 - [Form Feedback and Accessibility Enhancement]
+**Learning:** Adding a visually-hidden label to a textarea and providing real-time character count feedback significantly improves accessibility for screen reader users. Disabling the submit button on form submission prevents duplicate requests and provides immediate visual confirmation of the action. Using `setTimeout(..., 0)` in the submit handler ensures the form is dispatched before the button state changes.
+**Action:** Always include a `visually-hidden` label for form inputs that lack a visible one. Ensure all long-running actions provide immediate UI feedback.
