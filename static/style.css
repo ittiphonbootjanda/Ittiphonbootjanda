@@ -28,9 +28,31 @@ textarea {
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
     font-family: inherit;
     font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.char-count {
+    text-align: right;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    text-align: left;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
 }
 
 input[type="submit"] {
@@ -41,10 +63,21 @@ input[type="submit"] {
     border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
+    transition: background-color 0.2s, box-shadow 0.2s;
 }
 
 input[type="submit"]:hover {
     background-color: #45a049;
+}
+
+input[type="submit"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.4);
+}
+
+input[type="submit"]:disabled {
+    background-color: #9ccc9c;
+    cursor: not-allowed;
 }
 
 .video-container {
