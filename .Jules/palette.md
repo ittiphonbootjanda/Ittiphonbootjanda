@@ -1,0 +1,3 @@
+## 2025-05-22 - [Enhance Feedback and Accessibility for Text-to-Video Generator]
+**Learning:** Adding immediate visual feedback (loading states) for long-running processes like video generation significantly improves perceived responsiveness. Using `setTimeout(..., 0)` in `onsubmit` ensures the form starts submitting before the button is disabled. Character counters with `aria-live="polite"` and `aria-atomic="true"` provide critical context for screen reader users on constrained inputs.
+**Action:** Always include loading states for form submissions that trigger heavy backend tasks. Use visually-hidden labels and live regions for real-time UI updates to maintain high accessibility standards.
