@@ -1,0 +1,3 @@
+## 2025-05-14 - [Accessible Form Feedback]
+**Learning:** Combining semantic labels, live regions for character counts, and immediate visual feedback via button states significantly improves the perceived reliability and accessibility of simple form-based applications. In small projects, inline event handlers and standard CSS transitions are effective for maintaining UX enhancements without adding dependency weight.
+**Action:** Always pair character counters with `aria-live="polite"` and `aria-atomic="true"`, and ensure long-running actions disable the submit button with a clear "Processing" message.
