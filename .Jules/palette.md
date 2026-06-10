@@ -1,0 +1,3 @@
+## 2025-05-22 - [Layout Stability & Feedback]
+**Learning:** Offsetting a border-width increase with an equivalent padding reduction on :focus (e.g., base 1px border/10px padding vs focus 2px border/9px padding) prevents layout "jitter" while maintaining a strong visual focus indicator. Additionally, using `setTimeout(..., 0)` in an `onsubmit` handler allows the browser to initiate the form's POST request before the submit button is disabled for UX feedback.
+**Action:** Apply the border-padding offset pattern for all interactive elements requiring high-visibility focus states to ensure layout stability.
