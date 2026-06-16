@@ -1,0 +1,3 @@
+## 2026-06-16 - [Character counter and loading state patterns]
+**Learning:** For slow operations like video generation, immediate visual feedback (disabling button and changing text) is crucial to prevent double submissions and provide clear status. For small templates, inline JS handlers are a compact way to implement these interactions.
+**Action:** Use `setTimeout(..., 0)` in form submission handlers to ensure the browser has time to register the click/navigation before the button is disabled. Use the `.visually-hidden` class for accessibility labels that shouldn't be part of the visual design.
