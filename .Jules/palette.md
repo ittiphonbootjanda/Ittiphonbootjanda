@@ -1,0 +1,3 @@
+## 2025-05-15 - [Accessible Character Counters and Loading States]
+**Learning:** For interactive elements like character counters, using `aria-live="polite"` with `aria-atomic="true"` ensures that screen readers announce the full context (e.g., "19 / 500") rather than just the change. Additionally, using a `setTimeout` with a delay of 0 in the form's `onsubmit` handler allows the browser to initiate the POST request before the submit button is disabled for UX feedback.
+**Action:** Always pair `aria-live` with `aria-atomic="true"` for counters, and use the `setTimeout(..., 0)` pattern to avoid blocking form submissions when disabling buttons.
