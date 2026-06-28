@@ -1,0 +1,3 @@
+## 2025-05-15 - [Accessible Character Counters and Loading States]
+**Learning:** For dynamic UI elements like character counters, using `aria-live="polite"` and `aria-atomic="true"` ensures screen readers announce the full context (e.g., "43 / 500") on every update. Additionally, providing immediate visual feedback for long-running operations (like video generation) by disabling the submit button and changing its label prevents multiple submissions and improves perceived performance.
+**Action:** Always include ARIA live regions for real-time counters and implement transient loading states for async form submissions using compact inline JavaScript for micro-UX tasks.
