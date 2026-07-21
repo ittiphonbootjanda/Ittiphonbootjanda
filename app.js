@@ -1,23 +1,21 @@
 /**
- * Drive Terminal Auto-Protect Edition - app.js
+ * Drive Terminal AI Edition - app.js
  */
 
 const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-const STATE_FILENAME = 'drive_terminal_autosafe_state.bin';
 
 let accessToken = null;
 let tokenClient;
-let currentStateFileId = null;
-let isSyncing = false;
 
-// 1. Terminal & Emulator Setup (Same as Creator Edition)
+// 1. Terminal Setup
 const term = new Terminal({ cursorBlink: true, fontSize: 14, theme: { background: '#000', foreground: '#0f0' } });
 const fitAddon = new FitAddon.FitAddon();
 term.loadAddon(fitAddon);
 term.open(document.getElementById('terminal-container'));
 fitAddon.fit();
 
+// 2. Emulator Setup
 let emulator = new V86Starter({
     wasm_path: "https://copy.sh/v86/v86.wasm",
     memory_size: 256 * 1024 * 1024,
@@ -31,75 +29,59 @@ let emulator = new V86Starter({
 emulator.add_listener("serial0-output-char", (char) => term.write(char));
 term.onData(data => { for(let i=0; i<data.length; i++) emulator.serial0_send(data.charCodeAt(i)); });
 
-// 2. Enhanced Auto-Sync Logic
-async function autoSave() {
-    if (!accessToken || isSyncing) return;
-    isSyncing = true;
+// 3. AI Helper Logic (Mocked Gemini Interface)
+document.getElementById('ai-ask-btn').onclick = async () => {
+    const query = document.getElementById('ai-input').value;
+    if (!query) return;
     
-    console.log("[Auto-Save] Triggered...");
-    term.write('\r\n\x1b[1;33m[Auto-Protect] Saving state to Drive...\x1b[0m\r\n');
+    document.getElementById('ai-text').textContent = "กำลังวิเคราะห์คำสั่งด้วย AI...";
+    document.getElementById('ai-code').textContent = "";
+    document.getElementById('ai-response-overlay').style.display = 'block';
 
-    emulator.save_state(async (err, state) => {
-        if (err) {
-            isSyncing = false;
-            return console.error(err);
+    // ในสถานการณ์จริง จะส่งคำสั่งไปที่ API ของ Gemini
+    // นี่คือตัวอย่างการจำลองการตอบกลับของ AI
+    setTimeout(() => {
+        let responseText = "";
+        let command = "";
+
+        if (query.includes("Python") || query.includes("ไพทอน")) {
+            responseText = "ในการติดตั้ง Python 3 บนระบบ Alpine Linux ให้ใช้คำสั่งต่อไปนี้:";
+            command = "apk update && apk add python3";
+        } else if (query.includes("Git") || query.includes("กิต")) {
+            responseText = "ในการติดตั้ง Git เพื่อโคลนโค้ด ให้ใช้คำสั่ง:";
+            command = "apk add git";
+        } else {
+            responseText = "ฉันขอแนะนำให้คุณเริ่มด้วยการอัปเดตแพ็กเกจระบบ:";
+            command = "apk update";
         }
 
-        const metadata = { name: STATE_FILENAME, mimeType: 'application/octet-stream' };
-        const file = new Blob([state], { type: 'application/octet-stream' });
-        const formData = new FormData();
-        formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-        formData.append('file', file);
+        document.getElementById('ai-text').textContent = responseText;
+        document.getElementById('ai-code').textContent = command;
+    }, 1000);
+};
 
-        const url = currentStateFileId ? `https://www.googleapis.com/upload/drive/v3/files/${currentStateFileId}?uploadType=multipart` : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-        const method = currentStateFileId ? 'PATCH' : 'POST';
-
-        try {
-            const res = await fetch(url, { method, headers: { 'Authorization': `Bearer ${accessToken}` }, body: formData });
-            const result = await res.json();
-            currentStateFileId = result.id;
-            term.write('\x1b[1;32m[Auto-Protect] Sync Complete!\x1b[0m\r\n');
-        } catch (err) {
-            console.error("Auto-save failed", err);
-        } finally {
-            isSyncing = false;
-        }
-    });
-}
-
-// 3. Event Listeners for Auto-Sync
-// A. บันทึกเมื่อสลับแอป หรือย่อหน้าจอ (เสถียรที่สุดบนมือถือ)
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-        autoSave();
+document.getElementById('run-ai-code').onclick = () => {
+    const code = document.getElementById('ai-code').textContent;
+    if (code) {
+        for(let i=0; i<code.length; i++) emulator.serial0_send(code.charCodeAt(i));
+        emulator.serial0_send(13); // ส่ง Enter
+        document.getElementById('ai-response-overlay').style.display = 'none';
     }
-});
+};
 
-// B. บันทึกทุกๆ 10 นาที (ป้องกันเครื่องค้าง)
-setInterval(autoSave, 10 * 60 * 1000);
+document.getElementById('close-ai').onclick = () => {
+    document.getElementById('ai-response-overlay').style.display = 'none';
+};
 
-// C. พยายามบันทึกเมื่อปิดหน้าต่าง (อาจไม่สำเร็จในบางเบราว์เซอร์ แต่ใส่ไว้เพื่อความชัวร์)
-window.addEventListener('beforeunload', (event) => {
-    if (accessToken) {
-        autoSave();
-        // แสดงคำเตือนเพื่อให้เบราว์เซอร์มีเวลาประมวลผลการบันทึก
-        event.preventDefault();
-        event.returnValue = '';
-    }
-});
-
-// 4. Standard Auth & Sync Functions
-async function syncToDrive() { await autoSave(); }
-
+// 4. Standard Functions
 function initGoogleAuth() {
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: 'https://www.googleapis.com/auth/drive.file',
         callback: (res) => {
             accessToken = res.access_token;
-            document.getElementById('drive-status').innerText = "Protected";
+            document.getElementById('drive-status').innerText = "AI-Connected";
             document.getElementById('drive-status').style.color = "#0f0";
-            term.writeln('\r\n[System] Auto-Protect Enabled.');
         },
     });
 }
