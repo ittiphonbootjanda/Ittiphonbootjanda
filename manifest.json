@@ -1,0 +1,16 @@
+{
+  "name": "Drive Terminal",
+  "short_name": "DriveTerm",
+  "description": "WASM Linux Terminal with Google Drive Sync",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/906/906334.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

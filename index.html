@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drive Terminal - Mobile Application</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/906/906334.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+    
+    <style>
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background: #000; color: #0f0;
+            font-family: 'Courier New', monospace;
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        header {
+            background: #111; padding: 10px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333; font-size: 12px;
+        }
+
+        .status-info { display: flex; gap: 15px; align-items: center; }
+        #drive-status { color: #ff4444; font-weight: bold; }
+
+        .top-nav button {
+            background: #222; color: #eee; border: 1px solid #444;
+            padding: 5px 12px; border-radius: 4px; cursor: pointer;
+            font-size: 11px; margin-left: 5px;
+        }
+
+        #main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
+        #terminal-container { flex: 1; background: #000; padding: 5px; }
+
+        /* Drive Explorer Sidebar */
+        #drive-explorer {
+            width: 260px; background: #0a0a0a;
+            border-left: 1px solid #333; display: none;
+            flex-direction: column; z-index: 10;
+            position: absolute; right: 0; top: 0; bottom: 0;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+        }
+        #explorer-header { padding: 12px; background: #1a1a1a; border-bottom: 1px solid #333; font-weight: bold; color: #fff; }
+        #file-list { flex: 1; overflow-y: auto; padding: 0; list-style: none; margin: 0; }
+        #file-list li { padding: 12px 15px; border-bottom: 1px solid #1a1a1a; cursor: pointer; color: #999; font-size: 13px; }
+        #file-list li:hover { background: #1a1a1a; color: #0f0; }
+
+        footer { background: #111; border-top: 1px solid #333; padding: 8px 5px; }
+        .mobile-keys { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+        .key-btn {
+            background: #1f1f1f; color: #fff; border: 1px solid #333;
+            padding: 12px 15px; border-radius: 8px; min-width: 65px;
+            font-weight: bold; font-size: 14px; flex-shrink: 0;
+        }
+        .key-btn:active { background: #333; transform: scale(0.95); }
+
+        #screen-container { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="status-info">
+            <span>OS: <span style="color:#0f0">Pro Max</span></span>
+            <span id="drive-status">Drive: Off</span>
+        </div>
+        <div class="top-nav">
+            <button id="toggle-explorer">EXPLORER</button>
+            <button id="connect-drive">LOGIN</button>
+            <button onclick="syncToDrive()">SYNC</button>
+        </div>
+    </header>
+
+    <div id="main-container">
+        <main id="terminal-container"></main>
+        
+        <aside id="drive-explorer">
+            <div id="explorer-header">Drive Files</div>
+            <ul id="file-list">
+                <li style="text-align:center; padding-top:20px;">Login to view files</li>
+            </ul>
+        </aside>
+    </div>
+
+    <!-- v86 Core Elements -->
+    <div id="screen-container"></div>
+
+    <footer>
+        <div class="mobile-keys">
+            <button class="key-btn" onclick="sendKey('Tab')">TAB</button>
+            <button class="key-btn" onclick="sendKey('Escape')">ESC</button>
+            <button class="key-btn" onclick="sendKey('ArrowUp')">↑</button>
+            <button class="key-btn" onclick="sendKey('ArrowDown')">↓</button>
+            <button class="key-btn" onclick="sendKey('ArrowLeft')">←</button>
+            <button class="key-btn" onclick="sendKey('ArrowRight')">→</button>
+            <button class="key-btn" style="color:#ff4444" onclick="emulator.serial0_send(3)">CTRL+C</button>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <script src="https://copy.sh/v86/libv86.js"></script>
+    
+    <script src="app.js"></script>
+    
+    <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('SW Registered'))
+                    .catch(err => console.log('SW Failed', err));
+            });
+        }
+    </script>
+</body>
+</html>
