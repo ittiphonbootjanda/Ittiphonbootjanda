@@ -1,22 +1,23 @@
 /**
- * Drive Terminal Creator Edition - app.js
+ * Drive Terminal Auto-Protect Edition - app.js
  */
 
 const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const STATE_FILENAME = 'drive_terminal_autosafe_state.bin';
 
 let accessToken = null;
 let tokenClient;
-let currentEditingFileId = null;
+let currentStateFileId = null;
+let isSyncing = false;
 
-// 1. Terminal Setup
+// 1. Terminal & Emulator Setup (Same as Creator Edition)
 const term = new Terminal({ cursorBlink: true, fontSize: 14, theme: { background: '#000', foreground: '#0f0' } });
 const fitAddon = new FitAddon.FitAddon();
 term.loadAddon(fitAddon);
 term.open(document.getElementById('terminal-container'));
 fitAddon.fit();
 
-// 2. Emulator Setup
 let emulator = new V86Starter({
     wasm_path: "https://copy.sh/v86/v86.wasm",
     memory_size: 256 * 1024 * 1024,
@@ -30,79 +31,65 @@ let emulator = new V86Starter({
 emulator.add_listener("serial0-output-char", (char) => term.write(char));
 term.onData(data => { for(let i=0; i<data.length; i++) emulator.serial0_send(data.charCodeAt(i)); });
 
-// 3. Drive Explorer & Editor Logic
-async function listDriveFiles() {
-    if (!accessToken) return;
-    const res = await fetch('https://www.googleapis.com/drive/v3/files?pageSize=30&fields=files(id, name, mimeType)', {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
-    const data = await res.json();
-    const list = document.getElementById('file-list');
-    list.innerHTML = '';
-    data.files.forEach(file => {
-        const li = document.createElement('li');
-        li.textContent = (file.mimeType.includes('folder') ? '📁 ' : '📄 ') + file.name;
-        li.onclick = () => {
-            if (!file.mimeType.includes('folder')) openInEditor(file);
-        };
-        list.appendChild(li);
-    });
-}
-
-async function openInEditor(file) {
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
-    const text = await res.text();
-    document.getElementById('editor-textarea').value = text;
-    document.getElementById('editing-filename').textContent = file.name;
-    currentEditingFileId = file.id;
-    document.getElementById('editor-overlay').style.display = 'flex';
-}
-
-async function saveFileToDrive() {
-    if (!accessToken) return;
-    const content = document.getElementById('editor-textarea').value;
-    const filename = document.getElementById('editing-filename').textContent;
+// 2. Enhanced Auto-Sync Logic
+async function autoSave() {
+    if (!accessToken || isSyncing) return;
+    isSyncing = true;
     
-    const metadata = { name: filename, mimeType: 'text/plain' };
-    const blob = new Blob([content], { type: 'text/plain' });
-    const formData = new FormData();
-    formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-    formData.append('file', blob);
+    console.log("[Auto-Save] Triggered...");
+    term.write('\r\n\x1b[1;33m[Auto-Protect] Saving state to Drive...\x1b[0m\r\n');
 
-    let url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-    let method = 'POST';
-    if (currentEditingFileId) {
-        url = `https://www.googleapis.com/upload/drive/v3/files/${currentEditingFileId}?uploadType=multipart`;
-        method = 'PATCH';
-    }
+    emulator.save_state(async (err, state) => {
+        if (err) {
+            isSyncing = false;
+            return console.error(err);
+        }
 
-    const res = await fetch(url, { method, headers: { 'Authorization': `Bearer ${accessToken}` }, body: formData });
-    if (res.ok) {
-        alert("File saved to Google Drive!");
-        listDriveFiles();
-    }
+        const metadata = { name: STATE_FILENAME, mimeType: 'application/octet-stream' };
+        const file = new Blob([state], { type: 'application/octet-stream' });
+        const formData = new FormData();
+        formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        formData.append('file', file);
+
+        const url = currentStateFileId ? `https://www.googleapis.com/upload/drive/v3/files/${currentStateFileId}?uploadType=multipart` : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+        const method = currentStateFileId ? 'PATCH' : 'POST';
+
+        try {
+            const res = await fetch(url, { method, headers: { 'Authorization': `Bearer ${accessToken}` }, body: formData });
+            const result = await res.json();
+            currentStateFileId = result.id;
+            term.write('\x1b[1;32m[Auto-Protect] Sync Complete!\x1b[0m\r\n');
+        } catch (err) {
+            console.error("Auto-save failed", err);
+        } finally {
+            isSyncing = false;
+        }
+    });
 }
 
-// 4. UI Events
-document.getElementById('new-file').onclick = () => {
-    const name = prompt("Enter new filename:", "new_script.py");
-    if (name) {
-        document.getElementById('editor-textarea').value = "";
-        document.getElementById('editing-filename').textContent = name;
-        currentEditingFileId = null;
-        document.getElementById('editor-overlay').style.display = 'flex';
+// 3. Event Listeners for Auto-Sync
+// A. บันทึกเมื่อสลับแอป หรือย่อหน้าจอ (เสถียรที่สุดบนมือถือ)
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        autoSave();
     }
-};
+});
 
-document.getElementById('save-editor').onclick = saveFileToDrive;
-document.getElementById('close-editor').onclick = () => document.getElementById('editor-overlay').style.display = 'none';
-document.getElementById('toggle-explorer').onclick = () => {
-    const exp = document.getElementById('drive-explorer');
-    exp.style.display = exp.style.display === 'flex' ? 'none' : 'flex';
-    if (exp.style.display === 'flex') listDriveFiles();
-};
+// B. บันทึกทุกๆ 10 นาที (ป้องกันเครื่องค้าง)
+setInterval(autoSave, 10 * 60 * 1000);
+
+// C. พยายามบันทึกเมื่อปิดหน้าต่าง (อาจไม่สำเร็จในบางเบราว์เซอร์ แต่ใส่ไว้เพื่อความชัวร์)
+window.addEventListener('beforeunload', (event) => {
+    if (accessToken) {
+        autoSave();
+        // แสดงคำเตือนเพื่อให้เบราว์เซอร์มีเวลาประมวลผลการบันทึก
+        event.preventDefault();
+        event.returnValue = '';
+    }
+});
+
+// 4. Standard Auth & Sync Functions
+async function syncToDrive() { await autoSave(); }
 
 function initGoogleAuth() {
     tokenClient = google.accounts.oauth2.initTokenClient({
@@ -110,9 +97,9 @@ function initGoogleAuth() {
         scope: 'https://www.googleapis.com/auth/drive.file',
         callback: (res) => {
             accessToken = res.access_token;
-            document.getElementById('drive-status').innerText = "On";
+            document.getElementById('drive-status').innerText = "Protected";
             document.getElementById('drive-status').style.color = "#0f0";
-            listDriveFiles();
+            term.writeln('\r\n[System] Auto-Protect Enabled.');
         },
     });
 }
