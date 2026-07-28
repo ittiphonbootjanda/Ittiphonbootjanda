@@ -1,0 +1,3 @@
+## 2025-05-15 - Layout Shift Prevention during Focus Transitions
+**Learning:** When adding borders to interactive elements on focus, maintaining consistent padding is crucial to prevent layout jitter. If a border is added where none (or a transparent one) existed, the internal padding should be adjusted by the border's width ONLY if the total box size needs to remain identical to surrounding content. However, for buttons with fixed internal space, it's often better to start with a transparent border of the same width to ensure zero movement.
+**Action:** Always verify focus states visually or with automated checks to ensure no element dimensions change by more than 1px.
