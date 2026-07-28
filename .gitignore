@@ -1,0 +1,16 @@
+# Flask artifacts
+app.log
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Generated videos
+videos/*.mp4
+
+# Python environment
+venv/
+.env
+
+# Testing artifacts
+.pytest_cache/
+/home/jules/verification/
