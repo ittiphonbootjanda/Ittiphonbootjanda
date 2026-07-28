@@ -1,0 +1,6 @@
+videos/*.mp4
+app.log
+__pycache__/
+*.pyc
+.Jules/
+verification/
