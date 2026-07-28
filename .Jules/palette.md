@@ -1,0 +1,3 @@
+## 2026-04-03 - [Accessible Form & Loading State]
+**Learning:** Combining `.visually-hidden` labels with descriptive placeholder text maintains visual design while meeting WCAG standards. Immediate UI feedback (disabling button and changing text) on POST submission is critical for long-running tasks like video generation to prevent double-submissions and signal progress.
+**Action:** Always include a `.visually-hidden` utility in the project CSS and apply it to icon-only or unlabeled inputs. Use `setTimeout(..., 0)` or similar deferral if the submit button needs to be disabled after the browser registers the form post.
