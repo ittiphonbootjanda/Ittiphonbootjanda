@@ -1,0 +1,3 @@
+## 2025-05-14 - Loading states and Character Counters
+**Learning:** For long-running operations like video generation, immediate visual feedback (disabling the button and changing text) is crucial to prevent multiple submissions and reassure the user. Combining this with accessibility features like visually-hidden labels and ARIA-live regions for character counts ensures the UI is both pleasant and inclusive.
+**Action:** Always include a loading state for any action that takes more than 1 second, and use `.visually-hidden` for labels that are redundant visually but necessary for screen readers.
