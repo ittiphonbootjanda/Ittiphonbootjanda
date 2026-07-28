@@ -1,0 +1,3 @@
+## 2025-01-30 - [Loading Feedback and Focus States]
+**Learning:** For long-running operations like video generation, providing immediate visual feedback by disabling the submit button and changing its text is crucial to prevent multiple submissions and confirm the action was received. Using `setTimeout(..., 0)` in the 'submit' event listener is an effective pattern to allow the browser to initiate the POST request before the DOM modification disables the button.
+**Action:** Always implement loading states for async/form actions and ensure focus indicators are highly visible (e.g., 3px box-shadow) for better accessibility.
