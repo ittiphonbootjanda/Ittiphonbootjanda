@@ -1,0 +1,3 @@
+## 2025-05-14 - [Character Counter and Loading Feedback]
+**Learning:** For long-running operations like video generation, providing immediate feedback by disabling the submit button and changing its text is crucial. Using `setTimeout(..., 0)` in the `onsubmit` handler ensures the browser initiates the POST request before the button state changes. For accessibility, combining `aria-live="polite"` with `aria-atomic="true"` on character counters ensures screen readers announce the full context of the update.
+**Action:** Always include `aria-atomic="true"` on dynamic status updates like character counters, and use the `setTimeout` trick for non-AJAX form submission feedback.
