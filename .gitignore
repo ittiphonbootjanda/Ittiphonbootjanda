@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+*$py.class
+app.log
+videos/*.mp4
+.pytest_cache/
