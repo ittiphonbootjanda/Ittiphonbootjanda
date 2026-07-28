@@ -1,0 +1,3 @@
+## 2025-05-22 - [UX & Accessibility Enhancements for Video Generator]
+**Learning:** For long-running operations like video generation, providing immediate visual feedback by disabling the submit button and updating its text prevents duplicate submissions and reduces user anxiety. Combining this with accessibility features like visually-hidden labels and aria-live character counters ensures a robust experience for all users.
+**Action:** Always include loading states for async actions and use aria-live="polite" with aria-atomic="true" for dynamic content like character counts to ensure screen readers provide full context.
