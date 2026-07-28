@@ -9,10 +9,14 @@
 <body>
     <div class="container">
         <h1>Text to Video Generator</h1>
-        <form action="/generate" method="post">
-            <textarea name="text" rows="10" cols="50" placeholder="Enter your text here..."></textarea>
+        <form action="/generate" method="post" id="generator-form">
+            <label for="video-text" class="visually-hidden">Text to be converted into video</label>
+            <textarea id="video-text" name="text" rows="10" cols="50" placeholder="Enter your text here..." maxlength="500" required></textarea>
+            <div class="char-count" aria-live="polite">
+                <span id="char-count">0</span>/500 characters
+            </div>
             <br>
-            <input type="submit" value="Generate Video">
+            <input type="submit" id="submit-btn" value="Generate Video">
         </form>
         {% if video_path %}
         <div class="video-container">
@@ -24,5 +28,24 @@
         </div>
         {% endif %}
     </div>
+    <script>
+        const textarea = document.getElementById('video-text');
+        const charCount = document.getElementById('char-count');
+        const form = document.getElementById('generator-form');
+        const submitBtn = document.getElementById('submit-btn');
+
+        textarea.addEventListener('input', () => {
+            charCount.textContent = textarea.value.length;
+        });
+
+        form.addEventListener('submit', () => {
+            // Use setTimeout(..., 0) to ensure the browser has time to start the form submission
+            // before the button is disabled, preventing the submission from being canceled.
+            setTimeout(() => {
+                submitBtn.disabled = true;
+                submitBtn.value = 'Generating...';
+            }, 0);
+        });
+    </script>
 </body>
 </html>
