@@ -9,10 +9,12 @@
 <body>
     <div class="container">
         <h1>Text to Video Generator</h1>
-        <form action="/generate" method="post">
-            <textarea name="text" rows="10" cols="50" placeholder="Enter your text here..."></textarea>
+        <form id="generator-form" action="/generate" method="post">
+            <label for="video-text" class="visually-hidden">Text for video</label>
+            <textarea id="video-text" name="text" rows="10" cols="50" placeholder="Enter your text here..." maxlength="500" required></textarea>
+            <div id="char-count" class="char-count" aria-live="polite">0 / 500</div>
             <br>
-            <input type="submit" value="Generate Video">
+            <input type="submit" id="submit-btn" value="Generate Video">
         </form>
         {% if video_path %}
         <div class="video-container">
@@ -24,5 +26,31 @@
         </div>
         {% endif %}
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const textarea = document.getElementById('video-text');
+            const charCount = document.getElementById('char-count');
+            const form = document.getElementById('generator-form');
+            const submitBtn = document.getElementById('submit-btn');
+
+            const updateCount = () => {
+                const length = textarea.value.length;
+                charCount.textContent = `${length} / 500`;
+            };
+
+            textarea.addEventListener('input', updateCount);
+
+            // Initialize count on load (in case of browser back/refresh)
+            updateCount();
+
+            form.addEventListener('submit', () => {
+                setTimeout(() => {
+                    submitBtn.disabled = true;
+                    submitBtn.value = 'Generating...';
+                }, 0);
+            });
+        });
+    </script>
 </body>
 </html>
