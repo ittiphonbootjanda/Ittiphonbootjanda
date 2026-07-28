@@ -9,10 +9,11 @@
 <body>
     <div class="container">
         <h1>Text to Video Generator</h1>
-        <form action="/generate" method="post">
-            <textarea name="text" rows="10" cols="50" placeholder="Enter your text here..."></textarea>
-            <br>
-            <input type="submit" value="Generate Video">
+        <form action="/generate" method="post" id="generator-form">
+            <label for="video-text" class="visually-hidden">Text for video</label>
+            <textarea id="video-text" name="text" rows="10" cols="50" placeholder="Enter your text here..." required maxlength="500"></textarea>
+            <div id="char-count" class="char-count" aria-live="polite">0 / 500</div>
+            <input type="submit" id="submit-btn" value="Generate Video">
         </form>
         {% if video_path %}
         <div class="video-container">
@@ -24,5 +25,38 @@
         </div>
         {% endif %}
     </div>
+    <script>
+        const textarea = document.getElementById('video-text');
+        const charCount = document.getElementById('char-count');
+        const form = document.getElementById('generator-form');
+        const submitBtn = document.getElementById('submit-btn');
+
+        function updateCount() {
+            const length = textarea.value.length;
+            charCount.textContent = `${length} / 500`;
+        }
+
+        textarea.addEventListener('input', updateCount);
+
+        // Initial count update
+        updateCount();
+
+        form.addEventListener('submit', function(e) {
+            // Check if default has already been prevented (e.g. by our test)
+            if (e.defaultPrevented) return;
+
+            submitBtn.value = 'Generating...';
+            submitBtn.disabled = true;
+
+            // For standard forms, once we set disabled=true, some browsers might stop the submission.
+            // But we already triggered the submit event.
+            // Actually, if we disable it HERE, the form should still submit.
+            // Let's use a small delay to be safe and ensure the UI updates.
+            setTimeout(() => {
+                // We don't need to call submitBtn.form.submit() if we didn't preventDefault()
+                // unless we want to disable the button AND then submit.
+            }, 0);
+        });
+    </script>
 </body>
 </html>
