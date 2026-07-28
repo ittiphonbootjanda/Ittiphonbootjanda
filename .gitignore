@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+app.log
+videos/*.mp4
+.pytest_cache/
+.vscode/
+.DS_Store
