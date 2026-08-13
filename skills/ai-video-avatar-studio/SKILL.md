@@ -27,8 +27,8 @@ description: End-to-end AI video avatar production from authorized images, scrip
 8. **สร้าง image-to-video/B-roll** ให้ใช้ภาพอ้างอิงที่มีสิทธิ์และกำหนดการเคลื่อนไหวแบบสั้นต่อฉาก รักษาอัตราส่วน 16:9 หรือ 9:16 เป็นค่าเริ่มต้น และตรวจความต่อเนื่องของตัวละคร/วัตถุ
 9. **ทำคำบรรยายและ timing** ให้ใช้ WhisperX หรือบริการที่เชื่อมต่อได้เพื่อสร้าง word-level timestamps และ SRT/ASS จากนั้นตรวจคำสำคัญ ภาษาไทย/อีสาน และการเหลื่อมของเวลา อย่าเชื่อ timestamps โดยไม่ตรวจตัวอย่างจริง
 10. **ตัดต่อและมิกซ์เสียง** ให้ตัดช่วงเงียบแบบ conservative ด้วย Auto-Editor/FFmpeg เติม captions, B-roll, text overlay, music และ sound effects ตาม manifest รักษาเสียงทุก track ด้วยการ overlay ไม่ใช่แทนที่ และควบคุมเสียงพูดให้เด่นกว่าดนตรี
-11. **ผ่าน quality gate** ให้ตรวจไฟล์เปิดได้ duration อัตราส่วน frame ไม่เสีย sync ปาก/เสียง คำบรรยายครอบคลุม pronunciation ระดับเสียง watermark ใบอนุญาต และความต่อเนื่อง อ่าน [render-pipeline.md](references/render-pipeline.md)
-12. **ส่งมอบและ cleanup** ให้บันทึก final video, manifest, quality report และ log ใน Google Drive ก่อนย้ายภาพต้นฉบับที่ผูกกับ job ไปถังขยะ อ่าน [google-drive-cleanup.md](references/google-drive-cleanup.md) ห้ามลบถาวร
+11. **ผ่าน quality gate** ให้ตรวจไฟล์เปิดได้ duration อัตราส่วน frame ไม่เสีย sync ปาก/เสียง คำบรรยายครอบคลุม pronunciation ระดับเสียง watermark ใบอนุญาต และความต่อเนื่อง อ่าน [render-pipeline.md](references/render-pipeline.md) และใช้ `scripts/run_video_quality_gate.py` เพื่อตรวจ ffprobe, decode, stream, timing, captions, semantic gates, provenance และ output hash
+12. **ส่งมอบและ cleanup** ให้บันทึก final video, manifest, quality report และ log ใน Google Drive ก่อนย้ายภาพต้นฉบับที่ผูกกับ job ไปถังขยะ อ่าน [google-drive-cleanup.md](references/google-drive-cleanup.md) ห้ามลบถาวร สำหรับไฟล์ local ให้ใช้ [quality-gate-local-cleanup.md](references/quality-gate-local-cleanup.md) และย้ายเฉพาะไฟล์ใน cleanup allowlist ไป quarantine หลัง gate ผ่าน ห้ามลบ final, manifest, report, source, first/last frame หรือไฟล์ที่อยู่นอก job root
 
 ## Veo-inspired generation mode
 
