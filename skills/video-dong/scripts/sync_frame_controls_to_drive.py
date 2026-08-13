@@ -14,6 +14,7 @@ import json
 import mimetypes
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -32,6 +33,10 @@ DRIVE_FIELDS = (
 
 class GwsError(RuntimeError):
     """Raised when a gws command fails or returns invalid JSON."""
+
+
+DEFAULT_GWS_TIMEOUT = 30.0
+DEFAULT_READ_RETRIES = 3
 
 
 def utc_now() -> str:
@@ -58,7 +63,8 @@ def parse_json_output(raw: str, command: list[str]) -> dict[str, Any]:
 
 def run_gws(service: str, resource: str, operation: str, *, params: dict[str, Any] | None = None,
             body: dict[str, Any] | None = None, upload: Path | None = None,
-            upload_content_type: str | None = None) -> dict[str, Any]:
+            upload_content_type: str | None = None, timeout: float = DEFAULT_GWS_TIMEOUT,
+            retries: int = DEFAULT_READ_RETRIES, mutation: bool = False) -> dict[str, Any]:
     command = ["gws", service, resource, operation]
     if params is not None:
         command.extend(["--params", json.dumps(params, ensure_ascii=False, separators=(",", ":"))])
@@ -69,11 +75,27 @@ def run_gws(service: str, resource: str, operation: str, *, params: dict[str, An
         if upload_content_type:
             command.extend(["--upload-content-type", upload_content_type])
 
-    completed = subprocess.run(command, capture_output=True, text=True, check=False)
-    if completed.returncode != 0:
+    # Read-only calls may retry with backoff. Mutations are never retried here;
+    # a timeout can mean the remote operation succeeded, so the caller must
+    # reconcile by idempotency key before attempting another mutation.
+    attempts = 1 if mutation else max(1, min(int(retries), 4))
+    for attempt in range(attempts):
+        try:
+            completed = subprocess.run(command, capture_output=True, text=True, check=False, timeout=timeout)
+        except subprocess.TimeoutExpired as exc:
+            if attempt + 1 < attempts:
+                time.sleep(min(2 ** attempt, 4))
+                continue
+            state = "unknown_after_timeout" if mutation else "timeout"
+            raise GwsError(f"{state}: gws command exceeded {timeout:.1f}s: {' '.join(command)}") from exc
+        if completed.returncode == 0:
+            return parse_json_output(completed.stdout, command)
         detail = (completed.stderr or completed.stdout).strip()
-        raise GwsError(f"gws command failed ({completed.returncode}): {' '.join(command)}\n{detail}")
-    return parse_json_output(completed.stdout, command)
+        if attempt + 1 < attempts:
+            time.sleep(min(2 ** attempt, 4))
+            continue
+        raise GwsError(f"gws command failed ({completed.returncode}): {' '.join(command)}\n{detail[:500]}")
+    raise GwsError(f"gws command did not complete: {' '.join(command)}")
 
 
 def sha256_file(path: Path) -> str:
@@ -123,20 +145,59 @@ def get_drive_file(file_id: str) -> dict[str, Any]:
 
 def create_job_folder(job_id: str, folder_name: str | None, parent_folder_id: str | None) -> dict[str, Any]:
     name = folder_name or f"job-{job_id}-frames"
+    if parent_folder_id:
+        query = (
+            f"name = '{name.replace(chr(39), chr(92) + chr(39))}' and "
+            f"'{parent_folder_id}' in parents and "
+            "mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+        )
+        existing = run_gws(
+            "drive", "files", "list",
+            params={"q": query, "pageSize": 10, "fields": "files(id,name,mimeType,parents,trashed,webViewLink)"},
+        ).get("files", [])
+        if existing:
+            record = dict(existing[0])
+            record["_created_by_this_run"] = False
+            return record
     body: dict[str, Any] = {"name": name, "mimeType": "application/vnd.google-apps.folder"}
     if parent_folder_id:
         body["parents"] = [parent_folder_id]
-    return run_gws("drive", "files", "create", body=body)
+    created = run_gws("drive", "files", "create", body=body, mutation=True)
+    created["_created_by_this_run"] = True
+    return created
 
 
-def upload_frame(path: Path, folder_id: str) -> dict[str, Any]:
-    metadata = {"name": path.name, "parents": [folder_id]}
+def frame_idempotency_key(job_id: str, scene_id: str, label: str, sha256: str) -> str:
+    return f"frame-control:{job_id}:{scene_id}:{label}:{sha256}"
+
+
+def find_existing_frame(folder_id: str, name: str, idempotency_key: str) -> dict[str, Any] | None:
+    safe_name = name.replace(chr(39), chr(92) + chr(39))
+    safe_description = idempotency_key.replace(chr(39), chr(92) + chr(39))
+    query = (
+        f"name = '{safe_name}' and '{folder_id}' in parents and trashed = false "
+        f"and description = '{safe_description}'"
+    )
+    response = run_gws(
+        "drive", "files", "list",
+        params={"q": query, "pageSize": 10, "fields": DRIVE_FIELDS},
+    )
+    files = response.get("files", [])
+    return dict(files[0]) if files else None
+
+
+def upload_frame(path: Path, folder_id: str, idempotency_key: str) -> dict[str, Any]:
+    existing = find_existing_frame(folder_id, path.name, idempotency_key)
+    if existing is not None:
+        return existing
+    metadata = {"name": path.name, "parents": [folder_id], "description": idempotency_key}
     mime_type = mimetypes.guess_type(path.name)[0]
     return run_gws(
         "drive", "files", "create",
         body=metadata,
         upload=path,
         upload_content_type=mime_type,
+        mutation=True,
     )
 
 
@@ -167,7 +228,7 @@ def verify_drive_file(remote: dict[str, Any], local: dict[str, Any] | None = Non
 
 
 def resolve_frame(label: str, path: Path | None, file_id: str | None, folder_id: str | None,
-                  dry_run: bool) -> dict[str, Any]:
+                  job_id: str, scene_id: str, dry_run: bool) -> dict[str, Any]:
     if path is None and file_id is None:
         raise ValueError(f"Provide either --{label}-frame PATH or --{label}-frame-file-id ID")
     if path is not None and file_id is not None:
@@ -187,13 +248,14 @@ def resolve_frame(label: str, path: Path | None, file_id: str | None, folder_id:
 
     assert path is not None
     local = local_frame_metadata(path)
+    idempotency_key = frame_idempotency_key(job_id, scene_id, label, local["sha256"])
     if dry_run:
         local["source"] = "local_upload_preview"
         local["verification"] = "skipped_in_dry_run"
         return local
     if not folder_id:
         raise ValueError("A Drive folder ID is required when uploading local frames")
-    uploaded = upload_frame(path, folder_id)
+    uploaded = upload_frame(path, folder_id, idempotency_key)
     remote = get_drive_file(uploaded.get("id", ""))
     verified = verify_drive_file(remote, local)
     verified.update({
@@ -203,6 +265,7 @@ def resolve_frame(label: str, path: Path | None, file_id: str | None, folder_id:
         "width": local["width"],
         "height": local["height"],
         "format": local["format"],
+        "idempotency_key": idempotency_key,
     })
     return verified
 
@@ -241,8 +304,8 @@ def main(argv: list[str] | None = None) -> int:
             if not folder_id:
                 raise GwsError("Drive folder creation returned no file ID")
 
-        first = resolve_frame("first", args.first_frame, args.first_frame_file_id, folder_id, args.dry_run)
-        last = resolve_frame("last", args.last_frame, args.last_frame_file_id, folder_id, args.dry_run)
+        first = resolve_frame("first", args.first_frame, args.first_frame_file_id, folder_id, args.job_id, args.scene_id, args.dry_run)
+        last = resolve_frame("last", args.last_frame, args.last_frame_file_id, folder_id, args.job_id, args.scene_id, args.dry_run)
 
         manifest: dict[str, Any] = {
             "schema_version": "1.0",
@@ -260,7 +323,7 @@ def main(argv: list[str] | None = None) -> int:
             },
             "drive": {
                 "folder_id": folder_id,
-                "folder_created_by_this_run": folder_record is not None,
+                "folder_created_by_this_run": bool(folder_record and folder_record.get("_created_by_this_run")),
                 "folder_name": folder_record.get("name") if folder_record else None,
             },
             "frames": {"first": first, "last": last},

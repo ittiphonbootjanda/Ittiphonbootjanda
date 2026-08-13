@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "job_id": "job-example-001",
+  "display_name": "วีดีโด่ง",
+  "technical_id": "video-dong",
+  "connections": [
+    {
+      "id": "drive-assets",
+      "kind": "storage",
+      "provider": "google-drive",
+      "transport": "gws-cli",
+      "purpose": "store frame references and final artifacts",
+      "scope": "read-write job folder only",
+      "health": "preflight-required",
+      "timeout_seconds": 30,
+      "read_attempts": 3,
+      "mutation_retry": "disabled-unless-idempotent",
+      "data_classification": "user-provided-media",
+      "last_checked_at": null
+    },
+    {
+      "id": "github-source",
+      "kind": "source-control",
+      "provider": "github",
+      "transport": "gh-cli",
+      "purpose": "version skill files and reproducible scripts",
+      "scope": "selected repository and feature branch",
+      "health": "preflight-required",
+      "timeout_seconds": 30,
+      "read_attempts": 2,
+      "mutation_retry": "disabled",
+      "data_classification": "source-code",
+      "last_checked_at": null
+    },
+    {
+      "id": "internet-reference",
+      "kind": "source",
+      "provider": "public-https",
+      "transport": "python-urllib",
+      "purpose": "retrieve explicitly allowed reference assets",
+      "scope": "explicit domain allowlist",
+      "health": "preflight-required",
+      "timeout_seconds": 20,
+      "read_attempts": 2,
+      "mutation_retry": "not-applicable",
+      "data_classification": "public-reference",
+      "license_required": true,
+      "provenance_required": true,
+      "last_checked_at": null
+    },
+    {
+      "id": "local-media-tools",
+      "kind": "processor",
+      "provider": "ffmpeg-ffprobe-python",
+      "transport": "local-process",
+      "purpose": "render, inspect and quality-gate media",
+      "scope": "job workspace only",
+      "health": "preflight-required",
+      "timeout_seconds": 120,
+      "read_attempts": 1,
+      "mutation_retry": "disabled",
+      "data_classification": "user-provided-media",
+      "last_checked_at": null
+    }
+  ],
+  "policy": {
+    "secrets_in_manifest": false,
+    "public_drive_sharing": false,
+    "cleanup_requires_verified_quality_gate": true,
+    "unknown_after_timeout_blocks_cleanup": true,
+    "internet_requires_https_and_public_ip": true
+  }
+}

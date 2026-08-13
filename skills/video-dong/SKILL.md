@@ -1,9 +1,13 @@
 ---
-name: ai-video-avatar-studio
-description: End-to-end AI video avatar production from authorized images, scripts, and voice. Use for Thai or Isaan-speaking avatars, image-to-video, lip-sync, portrait animation, consented face editing, automatic captions, smart editing, tool discovery from GitHub or APIs, Google Drive asset storage, and post-export cleanup.
+name: video-dong
+description: วีดีโด่ง — end-to-end AI video avatar, Veo-inspired generation, news visual storytelling, Thai/Isaan voice, first/last-frame control, Google Drive and external connector workflows with strict identity preservation and safe cleanup.
 ---
 
-# AI Video Avatar Studio
+# วีดีโด่ง (Video Dong)
+
+ชื่อแสดงผล: **วีดีโด่ง**
+Technical ID: `video-dong`
+Compatibility alias เดิม: `ai-video-avatar-studio`
 
 สร้างวิดีโอ Avatar และวิดีโอจากภาพแบบครบวงจร โดยใช้หลักการระดับฟังก์ชันของแพลตฟอร์มสมัยใหม่เท่านั้น ห้ามคัดลอกซอร์สโค้ด โมเดลปิด อัลกอริทึมลับ เครื่องหมายการค้า หรือส่วนติดต่อผู้ใช้ของผู้ให้บริการใด
 
@@ -17,11 +21,15 @@ description: End-to-end AI video avatar production from authorized images, scrip
 
 ## เวิร์กโฟลว์มาตรฐาน
 
+ก่อนเริ่มงานที่ใช้อินเทอร์เน็ต แอป/API/MCP หรือพื้นที่เก็บข้อมูลภายนอก ให้รัน `scripts/preflight_integrations.py` ในโหมดอ่านอย่างเดียว และสร้าง `connection-manifest.json` ตาม [connectors-and-resilience.md](references/connectors-and-resilience.md) ตรวจเครื่องมือ, authentication, Google Drive read-only health, GitHub auth, HTTPS, quota และพื้นที่ดิสก์ก่อนเริ่ม render หาก preflight ล้มเหลวหรือสถานะ provider เป็น `unknown_after_timeout` ให้หยุด mutation, upload และ cleanup จนกว่าจะตรวจสอบซ้ำได้
+
+การเรียกภายนอกทุกครั้งต้องมี timeout, bounded retry และ structured status การอ่านแบบ idempotent อาจ retry ด้วย exponential backoff/jitter ส่วน upload, move, trash, delete และ submit ที่ไม่ยืนยัน idempotency ห้าม retry หลัง timeout โดยอัตโนมัติ ให้ค้นหาผลลัพธ์เดิมด้วย job ID/hash ก่อน และห้ามส่ง secret ลง log หรือ manifest
+
 1. **รับบรีฟและกำหนด job ID** ให้สร้าง `job_id`, ระบุ input/output, language, aspect ratio, duration, quality target และสถานะงาน
 2. **ตรวจสิทธิ์และ provenance** ให้บันทึกแหล่งที่มา URL ผู้สร้าง ใบอนุญาต หลักฐานความยินยอม และ SHA-256 ของไฟล์ใน manifest ก่อนอัปโหลดหรือสร้างผลลัพธ์
 3. **วางสคริปต์และฉาก** ให้แยกบทพูด คำบรรยาย B-roll จังหวะกล้อง อารมณ์ เสียงประกอบ และจุดเปลี่ยนฉากเป็น scene manifest ห้ามยัดหลายการกระทำที่ไม่ต่อเนื่องไว้ในคลิปเดียว
 4. **เลือกเส้นทางเครื่องมือ** ให้เปรียบเทียบ API/บริการเชื่อมต่อได้กับ GitHub/self-hosted ตามคุณภาพ ความเป็นส่วนตัว GPU เวลา ใบอนุญาต และค่าใช้จ่าย อ่าน [tool-routing.md](references/tool-routing.md) เมื่อจำเป็นต้องเลือกหรือค้นหาเครื่องมือ
-5. **ค้นหาและจัดเก็บ asset** ให้ค้นจากแหล่งที่อนุญาต ดาวน์โหลดเฉพาะไฟล์ที่จำเป็น บันทึก provenance แล้วอัปโหลดเข้าโฟลเดอร์ job ใน Google Drive โดยใช้แนวทางใน [google-drive-cleanup.md](references/google-drive-cleanup.md)
+5. **ค้นหาและจัดเก็บ asset** ให้ค้นจากแหล่งที่อนุญาต ดาวน์โหลดเฉพาะไฟล์ที่จำเป็นด้วย `scripts/fetch_internet_asset.py` ตรวจ URL ด้วย public-HTTPS/SSRF policy, explicit domain allowlist, MIME/ขนาด/redirect/license และบันทึก URL ผู้เผยแพร่ เวลาเข้าถึง และ SHA-256 ก่อนอัปโหลดเข้าโฟลเดอร์ job ใน Google Drive โดยใช้แนวทางใน [google-drive-cleanup.md](references/google-drive-cleanup.md) และ [connectors-and-resilience.md](references/connectors-and-resilience.md) ห้ามรันไฟล์ที่ดาวน์โหลดจากเว็บโดยอัตโนมัติ
 6. **เตรียมเสียง** ให้เลือกเสียงภาษาไทยจาก provider ที่รองรับ locale `th-TH` หรือใช้ ThonburianTTS เมื่อมี runtime/GPU เหมาะสม สำหรับภาษาอีสาน ให้ตรวจสคริปต์โดยเจ้าของภาษา กำหนดคำอ่าน/การเว้นวรรค และทำตัวอย่างสั้นก่อนสร้างทั้งงาน อ่าน [thai-isaan-voice.md](references/thai-isaan-voice.md)
 7. **สร้าง Avatar และลิปซิงก์** ให้เลือกบริการ Avatar/API เมื่อผู้ใช้ต้องการคุณภาพสูงและไม่ดูแล GPU หรือเลือก MuseTalk, SadTalker, LivePortrait และโมดูลที่เหมาะสมเมื่อ self-hosted ให้ตรวจ identity drift, ปาก/ฟัน/ตา, การกะพริบ, ศีรษะ, มือ และฉากหลัง
 8. **สร้าง image-to-video/B-roll** ให้ใช้ภาพอ้างอิงที่มีสิทธิ์และกำหนดการเคลื่อนไหวแบบสั้นต่อฉาก รักษาอัตราส่วน 16:9 หรือ 9:16 เป็นค่าเริ่มต้น และตรวจความต่อเนื่องของตัวละคร/วัตถุ
@@ -86,7 +94,11 @@ job_id/
 - **First/last-frame control กับ Google Drive:** [frame-control-google-drive.md](references/frame-control-google-drive.md)
 - **Google Drive, การติดตาม file ID และการย้ายไปถังขยะ:** [google-drive-cleanup.md](references/google-drive-cleanup.md)
 - **consent, likeness, copyright และ provenance:** [safety-consent.md](references/safety-consent.md)
+- **connectors, internet safety, timeout/retry และ recovery:** [connectors-and-resilience.md](references/connectors-and-resilience.md)
+- **preflight ตรวจ Google Drive, GitHub, เครื่องมือ และ HTTPS:** `scripts/preflight_integrations.py`
+- **ดาวน์โหลด asset จากอินเทอร์เน็ตอย่างปลอดภัยพร้อม provenance/hash:** `scripts/fetch_internet_asset.py`
+- **ตัวอย่าง connection manifest ที่ไม่เก็บ secret:** `examples/connection-manifest.json`
 
 ## ข้อห้ามที่ไม่เปลี่ยนแปลง
 
-ห้ามข้าม consent gate ห้ามใช้คำว่า “รองรับภาษาอีสาน” โดยไม่มีการทดสอบเสียงจริง ห้ามลบไฟล์ Google Drive แบบถาวร ห้ามลบต้นฉบับก่อน final export และ quality gate สำเร็จ ห้ามอ้างว่าเป็นการโคลน HeyGen, CapCut หรือ Veo ให้เรียกว่า workflow ที่ได้รับแรงบันดาลใจจากความสามารถสาธารณะและใช้ implementation ที่ถูกต้องตามสิทธิ์
+ห้ามข้าม consent gate ห้ามใช้คำว่า “รองรับภาษาอีสาน” โดยไม่มีการทดสอบเสียงจริง ห้ามลบไฟล์ Google Drive แบบถาวร ห้ามลบต้นฉบับก่อน final export และ quality gate สำเร็จ ห้ามทำให้ไฟล์เป็น public โดยไม่จำเป็น ห้ามเรียก URL ที่ไม่ผ่าน public-HTTPS/SSRF policy ห้ามส่ง secret ลง log ห้าม retry mutation ที่ไม่ idempotent หลัง timeout ห้าม fallback ไป provider อื่นโดยเงียบ ๆ และต้องหยุดเมื่อสถานะเป็น `unknown_after_timeout` ห้ามอ้างว่าเป็นการโคลน HeyGen, CapCut หรือ Veo ให้เรียกว่า workflow ที่ได้รับแรงบันดาลใจจากความสามารถสาธารณะและใช้ implementation ที่ถูกต้องตามสิทธิ์
