@@ -59,6 +59,33 @@ Compatibility alias เดิม: `ai-video-avatar-studio`
 | ต้องการลิปซิงก์เสียงแม่น | MuseTalk หรือ API lip-sync | ตรวจ alignment, fps, codec และเสียงต้นฉบับ |
 | ต้องการตัดต่อเร็ว | Auto-Editor + FFmpeg + WhisperX | ตั้ง padding และตรวจไม่ให้ตัดพยางค์/ลมหายใจ |
 
+## โหมดเร่งความเร็วที่ปลอดภัย
+
+สำหรับรอบทดลอง ให้แยก **preview path** ออกจาก **delivery path**. เริ่มต้นด้วยการตรวจระบบแบบขนานและ cache เฉพาะ read-only health checks ที่ยังไม่หมดอายุ:
+
+```bash
+python3 scripts/preflight_integrations.py \
+  --workers 8 \
+  --cache-file .cache/preflight.json \
+  --cache-ttl-sec 300 \
+  --report-out connection-preflight-report.json
+```
+
+ให้ reuse asset, avatar preparation, TTS/ASR alignment และเฟรมอ้างอิงเมื่อ `source_sha256`, model/provider version, settings hash และ consent ID ตรงกัน. งานฉากหรือ asset ที่ไม่พึ่งกันทำขนานแบบ bounded ตาม VRAM, rate limit และพื้นที่ดิสก์; อย่าขนานแบบไร้ขอบเขต.
+
+Preview ใช้ proxy/scene สั้นและตรวจด้วย:
+
+```bash
+python3 scripts/run_video_quality_gate.py manifest.json \
+  --profile preview \
+  --report-out quality-preview.json \
+  --command-timeout 120
+```
+
+`--profile preview` ข้าม full decode และ output hash เพื่อให้รอบ inner loop เร็วขึ้น แต่ไม่ใช่ delivery gate และไม่อนุญาต cleanup. ก่อนส่งมอบต้องใช้ค่าเริ่มต้น `--profile delivery`, full decode, output hash, semantic review และ provenance gate; การย้ายไฟล์ไปถังขยะทำได้ต่อเมื่อ final artifacts เปิดอ่านได้และผ่านทุก gate เท่านั้น.
+
+สำหรับ provider ที่ทำงานนาน ให้ใช้ async queue + webhook/status แทนการค้าง process หรือ polling ถี่ โดยบันทึก provider job ID, idempotency key และสถานะ `unknown_after_timeout` อย่างชัดเจน. เมื่อ timeout ห้าม submit mutation ซ้ำจนกว่าจะตรวจผลเดิม.
+
 ## ข้อกำหนดคุณภาพเริ่มต้น
 
 ให้ตั้งค่าเสียงเป็น PCM/WAV ระหว่างทำงาน และส่งออกวิดีโอด้วย codec ที่ปลายทางรองรับ ตรวจ `fps`, `duration`, `width`, `height`, audio sample rate และ loudness ให้สอดคล้องกันตลอด pipeline แบ่งงานเป็นคลิปสั้นหรือฉากที่ตรวจได้ง่าย และเก็บ intermediate ที่จำเป็นจนกว่า final จะผ่าน quality gate
@@ -95,6 +122,7 @@ job_id/
 - **Google Drive, การติดตาม file ID และการย้ายไปถังขยะ:** [google-drive-cleanup.md](references/google-drive-cleanup.md)
 - **consent, likeness, copyright และ provenance:** [safety-consent.md](references/safety-consent.md)
 - **connectors, internet safety, timeout/retry และ recovery:** [connectors-and-resilience.md](references/connectors-and-resilience.md)
+- **speed optimization, preview/delivery split, queue และ bounded concurrency:** [speed-optimization.md](references/speed-optimization.md)
 - **preflight ตรวจ Google Drive, GitHub, เครื่องมือ และ HTTPS:** `scripts/preflight_integrations.py`
 - **ดาวน์โหลด asset จากอินเทอร์เน็ตอย่างปลอดภัยพร้อม provenance/hash:** `scripts/fetch_internet_asset.py`
 - **ตัวอย่าง connection manifest ที่ไม่เก็บ secret:** `examples/connection-manifest.json`

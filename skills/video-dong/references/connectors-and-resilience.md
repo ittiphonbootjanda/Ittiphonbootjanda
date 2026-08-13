@@ -79,3 +79,21 @@
 - มี recovery log และสถานะ `unknown_after_timeout`
 - มี dry-run เป็นค่าเริ่มต้นสำหรับการเปลี่ยนแปลงที่ทำลายข้อมูล
 - มี human/semantic review แยกจาก machine gates โดยเฉพาะ identity, ข่าว และความถูกต้องของบริบท
+
+## 8. Fast inner loop และงานแบบ asynchronous
+
+เพื่อให้รอบทดลองเร็วขึ้น `scripts/preflight_integrations.py` รองรับ `--workers` สำหรับตรวจ read-only checks แบบขนาน และ `--cache-file` ร่วมกับ `--cache-ttl-sec` สำหรับ reuse เฉพาะรายงานที่ผ่านและยังไม่หมดอายุ ตัวอย่างเช่น:
+
+```bash
+python3 scripts/preflight_integrations.py \
+  --workers 8 \
+  --cache-file .cache/preflight.json \
+  --cache-ttl-sec 300 \
+  --report-out connection-preflight-report.json
+```
+
+TTL cache ใช้ได้เฉพาะ health/read-only checks และต้อง invalidated เมื่อ connection manifest, job root, URL, retry policy หรือ tool set เปลี่ยน ก่อนการ upload, trash, publish หรือ mutation อื่นต้องรัน preflight สดและตรวจผลใหม่เสมอ ห้ามใช้ cache เพื่อข้าม identity, provenance หรือ delivery quality gate.
+
+งานที่ใช้เวลานานควรแยกเป็น `submit`, `status-or-webhook`, `download`, `verify` และ `record` แล้วบันทึก provider job ID กับ idempotency key แทนการค้าง process แบบ synchronous. หาก provider รองรับ webhook ให้ตรวจ signature, provider job ID และสถานะ terminal ก่อนดาวน์โหลด; หาก webhook สูญหายให้ใช้ status query ที่มี backoff จำกัด. หลัง timeout ให้บันทึก `unknown_after_timeout` และห้าม submit ซ้ำจนกว่าจะค้นหาผลเดิม.
+
+งานที่ไม่พึ่งกัน เช่น asset fetch, TTS/ASR ของฉากที่แยกกัน และ scene generation ควรทำขนานแบบ bounded ตาม VRAM, rate limit และ disk budget. ห้ามทำงานขนานแบบไร้ขอบเขต เพราะอาจทำให้ cold start, GPU memory thrashing, provider 429 หรือไฟล์ชั่วคราวชนกันจนช้ากว่าการทำทีละงาน.

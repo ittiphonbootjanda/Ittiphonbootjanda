@@ -92,3 +92,18 @@ Metadata และ decode check ไม่สามารถยืนยัน li
 | Idempotency | รันซ้ำได้โดยไม่ทำลายไฟล์ซ้ำและรายงาน `already_absent`/`already_quarantined` |
 | Delivery evidence | เก็บ preview/contact sheet, caption coverage, sync notes และ provenance ledger |
 | Operations | เพิ่ม timeout, retry, disk-space check, logging และสถานะ job เมื่อรันใน production |
+
+## Fast preview profile และ timeout
+
+`run_video_quality_gate.py` รองรับ `--profile preview` สำหรับรอบพัฒนา โดยยังตรวจไฟล์, ffprobe, geometry/timing, audio, captions, semantic gates และ provenance ตาม manifest แต่ข้าม full decode และ output SHA-256 เพื่อให้รอบตรวจสั้นลง ผลลัพธ์ preview มีสถานะเตือนว่าไม่ใช่ delivery gate และ **ห้ามใช้เป็นเหตุผลในการ cleanup หรือย้าย source assets ไปถังขยะ**.
+
+ตัวอย่างคำสั่งสำหรับรอบพัฒนา:
+
+```bash
+python3 scripts/run_video_quality_gate.py manifest.json \
+  --profile preview \
+  --report-out quality-preview.json \
+  --command-timeout 120
+```
+
+Delivery ต้องใช้ค่าเริ่มต้น `--profile delivery` ซึ่งจะทำ full decode และบันทึก output SHA-256 ก่อนอนุญาต cleanup ตามเงื่อนไขเดิม หาก `ffprobe` หรือ `ffmpeg` เกิน `--command-timeout` gate จะ fail และ cleanup จะไม่ทำงาน เพื่อป้องกัน process ค้างหรือการตัดสินผลจากข้อมูลไม่ครบ.

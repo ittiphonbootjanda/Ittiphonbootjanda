@@ -47,12 +47,16 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
-def run_command(command: list[str]) -> tuple[int, str, str]:
+def run_command(command: list[str], timeout: float) -> tuple[int, str, str, bool]:
     try:
-        completed = subprocess.run(command, capture_output=True, text=True, check=False)
+        completed = subprocess.run(command, capture_output=True, text=True, check=False, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return 124, "", f"command timed out after {timeout:.1f}s", True
     except FileNotFoundError as exc:
-        return 127, "", str(exc)
-    return completed.returncode, completed.stdout, completed.stderr
+        return 127, "", str(exc), False
+    except OSError as exc:
+        return 126, "", f"{type(exc).__name__}: {exc}", False
+    return completed.returncode, completed.stdout, completed.stderr, False
 
 
 def add_check(checks: list[dict[str, Any]], name: str, status: str, message: str, **details: Any) -> None:
@@ -283,8 +287,11 @@ def main() -> int:
     parser.add_argument("--allow-warnings", action="store_true", help="allow pass_with_warnings to authorize cleanup")
     parser.add_argument("--permanent-delete", action="store_true", help="permanently delete candidates instead of quarantining")
     parser.add_argument("--confirm-permanent-delete", action="store_true", help="required together with --permanent-delete")
-    parser.add_argument("--skip-decode-check", action="store_true", help="skip full ffmpeg decode check")
+    parser.add_argument("--skip-decode-check", action="store_true", help="skip full ffmpeg decode check; preview-only shortcut")
+    parser.add_argument("--profile", choices=("delivery", "preview"), default="delivery", help="preview skips full decode and output hash and never authorizes cleanup")
+    parser.add_argument("--command-timeout", type=float, default=300.0, help="timeout in seconds for ffprobe and ffmpeg subprocesses")
     args = parser.parse_args()
+    args.command_timeout = max(1.0, min(float(args.command_timeout), 3600.0))
 
     manifest_path = args.manifest.expanduser().resolve()
     report_path = (args.report_out or manifest_path.parent / "quality-report.json").expanduser().resolve()
@@ -309,10 +316,10 @@ def main() -> int:
         add_check(checks, "file_integrity", "fail", "final video is missing or empty")
     else:
         add_check(checks, "file_integrity", "pass", "final video exists and is non-empty", path=str(video_path), size=video_path.stat().st_size)
-        code, stdout, stderr = run_command(["ffprobe", "-v", "error", "-print_format", "json", "-show_format", "-show_streams", str(video_path)])
+        code, stdout, stderr, timed_out = run_command(["ffprobe", "-v", "error", "-print_format", "json", "-show_format", "-show_streams", str(video_path)], args.command_timeout)
         if code != 0:
-            errors.append("ffprobe could not read final video")
-            add_check(checks, "ffprobe", "fail", "ffprobe failed", stderr=stderr[-2000:])
+            errors.append("ffprobe timed out" if timed_out else "ffprobe could not read final video")
+            add_check(checks, "ffprobe", "fail", "ffprobe timed out" if timed_out else "ffprobe failed", stderr=stderr[-2000:], timed_out=timed_out)
         else:
             try:
                 probe = json.loads(stdout)
@@ -367,14 +374,15 @@ def main() -> int:
         warnings.append("audio stream is absent but not required")
 
     if video_path and video_path.is_file():
-        if args.skip_decode_check:
-            add_check(checks, "decode", "warning", "full decode check was skipped")
+        skip_decode = args.skip_decode_check or args.profile == "preview"
+        if skip_decode:
+            add_check(checks, "decode", "warning", "full decode check was skipped", profile=args.profile)
             warnings.append("full decode check was skipped")
         else:
-            code, _, stderr = run_command(["ffmpeg", "-v", "error", "-i", str(video_path), "-f", "null", "-"])
+            code, _, stderr, timed_out = run_command(["ffmpeg", "-v", "error", "-i", str(video_path), "-f", "null", "-"], args.command_timeout)
             if code != 0:
-                errors.append("ffmpeg decode check failed")
-                add_check(checks, "decode", "fail", "full decode check failed", stderr=stderr[-2000:])
+                errors.append("ffmpeg decode timed out" if timed_out else "ffmpeg decode check failed")
+                add_check(checks, "decode", "fail", "ffmpeg decode timed out" if timed_out else "full decode check failed", stderr=stderr[-2000:], timed_out=timed_out)
             else:
                 add_check(checks, "decode", "pass", "full decode check passed")
 
@@ -422,13 +430,22 @@ def main() -> int:
     else:
         add_check(checks, "provenance", "pass" if provenance == "pass" else "warning", "provenance checked", gate_status=provenance)
 
-    final_hash = sha256_file(video_path) if video_path and video_path.is_file() else None
-    if final_hash:
-        add_check(checks, "output_hash", "pass", "final output SHA-256 recorded", sha256=final_hash)
+    if args.profile == "preview":
+        final_hash = None
+        add_check(checks, "output_hash", "warning", "output SHA-256 skipped for preview profile")
+        warnings.append("preview profile is not a delivery gate")
+    else:
+        final_hash = sha256_file(video_path) if video_path and video_path.is_file() else None
+        if final_hash:
+            add_check(checks, "output_hash", "pass", "final output SHA-256 recorded", sha256=final_hash)
 
     result = "fail" if errors else ("pass_with_warnings" if warnings else "pass")
     allow_warnings = args.allow_warnings or bool(settings.get("allow_warnings", False))
-    cleanup_allowed = result == "pass" or (result == "pass_with_warnings" and allow_warnings)
+    cleanup_allowed = (args.profile == "delivery") and (result == "pass" or (result == "pass_with_warnings" and allow_warnings))
+    if args.profile == "preview":
+        cleanup_allowed = False
+    if args.cleanup and args.profile == "preview":
+        warnings.append("cleanup is blocked for preview profile")
     if args.cleanup and manifest.get("cleanup", {}).get("local_cleanup_allowed") is not True:
         cleanup_allowed = False
         warnings.append("cleanup requested but manifest cleanup.local_cleanup_allowed is not true")
@@ -449,6 +466,7 @@ def main() -> int:
         "report_version": VERSION,
         "checked_at": now_utc(),
         "job_id": manifest.get("job_id"),
+        "profile": args.profile,
         "result": result,
         "video": {"path": str(video_path) if video_path else None, "sha256": final_hash, "probe": probe},
         "checks": checks,

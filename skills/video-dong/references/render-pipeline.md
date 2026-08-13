@@ -77,3 +77,11 @@ WhisperX ให้ word-level timestamps ได้ แต่ timestamps แล�
 ## Retry และสถานะ
 
 ใช้สถานะลำดับเดียว เช่น `planned → assets_ready → audio_ready → avatar_ready → edited → exported → quality_passed → delivered → cleanup_done` หากขั้นใดล้มเหลว ให้ตั้ง `failed` พร้อม error และหยุด cleanup ใช้ `job_id` และ hash เพื่อ reuse ผลลัพธ์ที่สำเร็จแล้ว ห้ามสร้างงานใหม่ซ้ำเมื่อมี output ที่ตรวจสอบได้
+
+## Fast preview และงานแบบ DAG
+
+ให้แยก `preview` ออกจาก `delivery` อย่างชัดเจน. Preview ใช้ proxy/bitrate ต่ำ, scene สั้นหรือเฉพาะช่วงที่เปลี่ยน, preview audio และ `run_video_quality_gate.py --profile preview`; ห้ามนำผล preview ไปอนุมัติ cleanup หรือเผยแพร่. Delivery ค่อยเรนเดอร์ความละเอียดจริง, full decode, output hash, semantic review และ provenance gate.
+
+จัดงานเป็นกราฟ dependency แทนการรันทุกอย่างแบบ serial: asset fetch และ license/provenance lookup ที่เป็นอิสระทำพร้อมกัน, TTS และ ASR/alignment ของช่วงที่ไม่พึ่งกันทำพร้อมกัน, avatar preparation ทำครั้งเดียวต่อ `source_sha256 + model_id + settings_hash`, และ scene generation ทำขนานตามขีดจำกัด VRAM/rate limit. ขั้น mix, final encode, quality gate และ Drive cleanup ให้เป็นลำดับและบันทึกสถานะใน manifest.
+
+ทุก cache entry ต้องผูกกับ input hash, model/provider version, prompt/settings hash, consent ID และ output hash พร้อมวันหมดอายุ. หากข้อมูลใดเปลี่ยนให้ invalidate เฉพาะ node ที่เกี่ยวข้อง ไม่สร้างงานทั้ง job ใหม่. เมื่อ provider เป็น async ให้เก็บ `provider_job_id`, `idempotency_key`, `submitted_at`, `status` และ `verified_at`; timeout ต้องเป็น `unknown_after_timeout` จนกว่าจะค้นหาผลเดิม.
