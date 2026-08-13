@@ -36,7 +36,7 @@ description: End-to-end AI video avatar production from authorized images, scrip
 
 ให้สร้าง `scene-plan.json`, `prompt-pack.json`, `continuity-ledger.json` และ `audio-plan.json` ก่อนเริ่ม render โดยล็อก `preserve_exact_person`, เสื้อผ้า พร็อพ ฉาก บทพูด และคุณสมบัติอื่นที่ผู้ใช้กำหนดว่าห้ามเปลี่ยนแปลง สร้างทีละช็อตหรือทีละฉาก ใช้ time-coded action beats กับคำสั่งกล้องที่วัดได้ และทำ revision เฉพาะองค์ประกอบที่ไม่ผ่าน quality gate
 
-หากเครื่องมือรองรับ ให้ใช้ภาพอ้างอิง เฟรมแรก เฟรมสุดท้าย หรือ video extension เพื่อรักษาความต่อเนื่องระหว่างฉาก หากไม่รองรับ ให้ใช้เฟรมสุดท้ายที่ผ่านการอนุมัติเป็น reference ใหม่และลดความซับซ้อนของการเปลี่ยนฉาก ห้ามสร้างบุคคลเดิมขึ้นใหม่โดยไม่มี reference เพราะเสี่ยงทำให้ใบหน้าและอัตลักษณ์เปลี่ยน
+หากเครื่องมือรองรับ ให้ใช้ภาพอ้างอิง เฟรมแรก เฟรมสุดท้าย หรือ video extension เพื่อรักษาความต่อเนื่องระหว่างฉาก หากไม่รองรับ ให้ใช้เฟรมสุดท้ายที่ผ่านการอนุมัติเป็น reference ใหม่และลดความซับซ้อนของการเปลี่ยนฉาก ห้ามสร้างบุคคลเดิมขึ้นใหม่โดยไม่มี reference เพราะเสี่ยงทำให้ใบหน้าและอัตลักษณ์เปลี่ยน ใช้ `scripts/sync_frame_controls_to_drive.py` เพื่ออัปโหลดหรือผูกเฟรมกับ Google Drive และสร้าง manifest ที่ตรวจสอบได้
 
 กำหนดเสียงเป็น `dialogue`, `diegetic_audio` และ `non_diegetic_audio` แยกกัน ตรวจว่าเสียงพูดตรงกับปากและเหตุการณ์ที่เห็น และในโหมดข่าวต้องไม่เพิ่มเสียงหรือภาพที่ทำให้เหตุการณ์จริงถูกบิดเบือน
 
@@ -83,6 +83,7 @@ job_id/
 - **ภาษาไทยและภาษาอีสาน:** [thai-isaan-voice.md](references/thai-isaan-voice.md)
 - **manifest, captions, audio mix และ quality gate:** [render-pipeline.md](references/render-pipeline.md)
 - **Veo-inspired prompt, shot control, continuity และ audio workflow:** [veo-inspired-video.md](references/veo-inspired-video.md)
+- **First/last-frame control กับ Google Drive:** [frame-control-google-drive.md](references/frame-control-google-drive.md)
 - **Google Drive, การติดตาม file ID และการย้ายไปถังขยะ:** [google-drive-cleanup.md](references/google-drive-cleanup.md)
 - **consent, likeness, copyright และ provenance:** [safety-consent.md](references/safety-consent.md)
 
