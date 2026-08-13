@@ -30,6 +30,16 @@ description: End-to-end AI video avatar production from authorized images, scrip
 11. **ผ่าน quality gate** ให้ตรวจไฟล์เปิดได้ duration อัตราส่วน frame ไม่เสีย sync ปาก/เสียง คำบรรยายครอบคลุม pronunciation ระดับเสียง watermark ใบอนุญาต และความต่อเนื่อง อ่าน [render-pipeline.md](references/render-pipeline.md)
 12. **ส่งมอบและ cleanup** ให้บันทึก final video, manifest, quality report และ log ใน Google Drive ก่อนย้ายภาพต้นฉบับที่ผูกกับ job ไปถังขยะ อ่าน [google-drive-cleanup.md](references/google-drive-cleanup.md) ห้ามลบถาวร
 
+## Veo-inspired generation mode
+
+เมื่อผู้ใช้ต้องการสร้างวิดีโอจากข้อความ ภาพ เสียง หรือวิดีโออ้างอิง ให้ใช้ workflow ใน [veo-inspired-video.md](references/veo-inspired-video.md) ซึ่งจำลองหลักการระดับฟังก์ชันที่เปิดเผยต่อสาธารณะ เช่น prompt compiler, shot framing and motion, image-based direction, native/paired audio, scene extension, last-frame continuity, conversational refinement และการประกอบคลิปสั้นเป็นเรื่องเดียว ห้ามเรียกสิ่งนี้ว่าเป็นการโคลน Veo และห้ามคัดลอกโมเดล ซอร์สโค้ด อัลกอริทึมปิด หรือทรัพย์สินทางปัญญาของผู้ให้บริการ
+
+ให้สร้าง `scene-plan.json`, `prompt-pack.json`, `continuity-ledger.json` และ `audio-plan.json` ก่อนเริ่ม render โดยล็อก `preserve_exact_person`, เสื้อผ้า พร็อพ ฉาก บทพูด และคุณสมบัติอื่นที่ผู้ใช้กำหนดว่าห้ามเปลี่ยนแปลง สร้างทีละช็อตหรือทีละฉาก ใช้ time-coded action beats กับคำสั่งกล้องที่วัดได้ และทำ revision เฉพาะองค์ประกอบที่ไม่ผ่าน quality gate
+
+หากเครื่องมือรองรับ ให้ใช้ภาพอ้างอิง เฟรมแรก เฟรมสุดท้าย หรือ video extension เพื่อรักษาความต่อเนื่องระหว่างฉาก หากไม่รองรับ ให้ใช้เฟรมสุดท้ายที่ผ่านการอนุมัติเป็น reference ใหม่และลดความซับซ้อนของการเปลี่ยนฉาก ห้ามสร้างบุคคลเดิมขึ้นใหม่โดยไม่มี reference เพราะเสี่ยงทำให้ใบหน้าและอัตลักษณ์เปลี่ยน
+
+กำหนดเสียงเป็น `dialogue`, `diegetic_audio` และ `non_diegetic_audio` แยกกัน ตรวจว่าเสียงพูดตรงกับปากและเหตุการณ์ที่เห็น และในโหมดข่าวต้องไม่เพิ่มเสียงหรือภาพที่ทำให้เหตุการณ์จริงถูกบิดเบือน
+
 ## การเลือกเส้นทางโดยเร็ว
 
 | ความต้องการ | เส้นทางเริ่มต้น | เงื่อนไขเปลี่ยนเส้นทาง |
@@ -72,9 +82,10 @@ job_id/
 - **การเลือกเครื่องมือและการเชื่อมต่อ:** [tool-routing.md](references/tool-routing.md)
 - **ภาษาไทยและภาษาอีสาน:** [thai-isaan-voice.md](references/thai-isaan-voice.md)
 - **manifest, captions, audio mix และ quality gate:** [render-pipeline.md](references/render-pipeline.md)
+- **Veo-inspired prompt, shot control, continuity และ audio workflow:** [veo-inspired-video.md](references/veo-inspired-video.md)
 - **Google Drive, การติดตาม file ID และการย้ายไปถังขยะ:** [google-drive-cleanup.md](references/google-drive-cleanup.md)
 - **consent, likeness, copyright และ provenance:** [safety-consent.md](references/safety-consent.md)
 
 ## ข้อห้ามที่ไม่เปลี่ยนแปลง
 
-ห้ามข้าม consent gate ห้ามใช้คำว่า “รองรับภาษาอีสาน” โดยไม่มีการทดสอบเสียงจริง ห้ามลบไฟล์ Google Drive แบบถาวร ห้ามลบต้นฉบับก่อน final export และ quality gate สำเร็จ ห้ามอ้างว่าเป็นการโคลน HeyGen หรือ CapCut ให้เรียกว่า workflow ที่ได้รับแรงบันดาลใจจากความสามารถสาธารณะและใช้ implementation ที่ถูกต้องตามสิทธิ์
+ห้ามข้าม consent gate ห้ามใช้คำว่า “รองรับภาษาอีสาน” โดยไม่มีการทดสอบเสียงจริง ห้ามลบไฟล์ Google Drive แบบถาวร ห้ามลบต้นฉบับก่อน final export และ quality gate สำเร็จ ห้ามอ้างว่าเป็นการโคลน HeyGen, CapCut หรือ Veo ให้เรียกว่า workflow ที่ได้รับแรงบันดาลใจจากความสามารถสาธารณะและใช้ implementation ที่ถูกต้องตามสิทธิ์
